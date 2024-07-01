@@ -3,6 +3,7 @@ import {ApiError} from "../utils/ApiError.js"
 import { User} from "../models/user.models.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { upload } from "../middlewares/multer.middleware.js";
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
 
@@ -10,7 +11,7 @@ const registerUser = asyncHandler( async (req, res) => {
 
 
     const {fullName, email, username, password } = req.body
-    //console.log("email: ", email);
+    console.log("email: ", email);
 
     if (
         [fullName, email, username, password].some((field) => field?.trim() === "")
@@ -25,31 +26,35 @@ const registerUser = asyncHandler( async (req, res) => {
     if (existedUser) {
         throw new ApiError(409, "User with email or username already exists")
     }
-    //console.log(req.files);
+    // console.log(req.files.avatar[0].filename," LLL");
+    // const xyz = "http://localhost:8000/upload/"+req.files.avatar[0].filename
+
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
-
-    let coverImageLocalPath;
-    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-        coverImageLocalPath = req.files.coverImage[0].path
-    }
+    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // console.log(avatarLocalPath)
+    // let coverImageLocalPath;
+    // if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+    //     coverImageLocalPath = req.files.coverImage[0].path
+    // }
     
+    console.log(avatarLocalPath)
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required")
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
+    console.log(avatar, " vvv")
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
-
     if (!avatar) {
-        // console.error('Avatar file is missing:', avatar);
+        console.error('Avatar file is missing:', avatar);
         throw new ApiError(400, "Avatar file is required");
     }
     
    
-
+    console.log(avatar.url, ">>>>")
+   
     const user = await User.create({
         fullName,
         avatar: avatar.url,
@@ -58,7 +63,7 @@ const registerUser = asyncHandler( async (req, res) => {
         password,
         username: username.toLowerCase()
     })
-
+    console.log(avatar)
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )

@@ -6,6 +6,7 @@ dotenv.config({
     path: './.env'
 })
 
+console.log(process.env.CLOUDINARY_CLOUD_NAME, "  process is env")
 
 
 connectDB()
